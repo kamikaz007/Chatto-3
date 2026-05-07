@@ -1450,26 +1450,7 @@
         }
     };
 
-    function openWallet() {
-        if (window.chatooAuth?.isPiAuthenticated()) {
-            Swal.fire({
-                title: '💳 محفظة Pi',
-                html: `<p>اسم المستخدم: <strong>${window.chatooAuth.getRealUsername()}</strong></p>
-                       <p>الرصيد يُعرض داخل متصفح Pi</p>`,
-                icon: 'info',
-                background: "#121214",
-                color: "#fff"
-            });
-        } else {
-            Swal.fire({
-                title: '🔐 سجّل الدخول أولاً',
-                text: 'اضغط على زر تسجيل الدخول في الأعلى',
-                icon: 'warning',
-                background: "#121214",
-                color: "#fff"
-            });
-        }
-    }
+    
 
     function openSettingsModal() {
         Swal.fire({
