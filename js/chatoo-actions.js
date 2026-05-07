@@ -1,4 +1,4 @@
-// chatoo-actions.js - Cinematic UI Web3 + عقد عائمة حقيقية + تحكم بحركة الهاتف + محفظة Pi حقيقية
+// chatoo-actions.js - Cinematic UI Web3 + عقد عائمة حقيقية + محفظة Pi حقيقية
 // المسؤول: Kamikaz007
 
 const PI_HORIZONS = [
@@ -26,14 +26,6 @@ class ChatooActions {
             default: ['📍', '🏠', '⚡', '🏛️']
         };
         this.fetchInterval = null;
-
-        // إعدادات التحكم بالحركة
-        this.motionEnabled = false;
-        this.motionNodes = [];
-        this._motionX = 0;
-        this._motionY = 0;
-        this._motionRAF = null;
-
         this.initCinematicUI();
     }
 
@@ -42,16 +34,10 @@ class ChatooActions {
         this.injectCinematicStyles();
         this.setupCustomNavButtons();
         this.startLocationTracking();
-        buildWalletModal(); // بناء المحفظة الحقيقية
+        buildWalletModal(); // بناء المحفظة الكاملة
 
-       // توفير دالة عامة لتفعيل / إيقاف حركة الهاتف
-      window.toggleMotion = () => {
-    if (this.motionEnabled) {
-        this._disableMotionControl();
-    } else {
-        this._enableMotionControl();
-    }
-};
+        // لم نعد نربط أي حركة تلقائياً باللمس
+        // تظل الدوائر تطفو باستخدام أنيميشن CSS العادي
 
         if (window.chatooNotif) {
             window.chatooNotif.systemAlert('واجهة Chatoo السينمائية نشطة');
@@ -194,38 +180,6 @@ class ChatooActions {
         }
     }
 
-    // ═══════════════════ التحكم بحركة الهاتف ═══════════════════
-    _enableMotionControl() {
-        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-            DeviceMotionEvent.requestPermission()
-                .then(state => {
-                    if (state === 'granted') {
-                        this._startMotionListener();
-                    } else {
-                        console.warn('Motion permission denied');
-                    }
-                })
-                .catch(console.error);
-        } else {
-            // أندرويد ومتصفحات لا تحتاج إذن
-            this._startMotionListener();
-        }
-    }
-
-    _startMotionListener() {
-        
-const update = () => {
-    if (this.motionNodes.length) {
-        this.motionNodes.forEach(node => {
-            const baseX = parseFloat(node.dataset.baseX) || 0;
-            const baseY = parseFloat(node.dataset.baseY) || 0;
-            // الحصول على مقياس التحويم الحالي من CSS (إن وجد)
-            const currentScale = node.style.transform?.match(/scale\(([^)]+)\)/)?.[1] || 1;
-            node.style.transform = `translate(${baseX + this._motionX}px, ${baseY + this._motionY}px) scale(${currentScale})`;
-        });
-    }
-    this._motionRAF = requestAnimationFrame(update);
-};
     // ═══════════════════ CSS ═══════════════════
     injectCinematicStyles() {
         if (document.getElementById('chatoo-cinematic-css')) return;
@@ -333,13 +287,13 @@ const update = () => {
 
     // ═══════════════════ أزرار التنقل ═══════════════════
     setupCustomNavButtons() {
+        // ✅ الأزرار موجودة مباشرة في HTML - لا حاجة لإضافة ديناميكية
         console.log('✅ Nav buttons ready in HTML');
     }
 
     // ═══════════════════ عرض العقد العائمة ═══════════════════
     renderFloatingNodes() {
         document.querySelectorAll('.floating-node').forEach(el => el.remove());
-        this.motionNodes = [];
 
         const venues = this.state.nearbyVenues;
         if (!venues || venues.length === 0) return;
@@ -382,20 +336,12 @@ const update = () => {
             el.style.top = `${y}px`;
             el.style.animationDelay = `${(index * 0.7).toFixed(1)}s`;
 
-            el.dataset.baseX = x;
-            el.dataset.baseY = y;
-
-            if (this.motionEnabled) {
-                el.style.animation = 'none';
-            }
-
             el.addEventListener('click', (e) => {
                 this._nodeRipple(e);
                 this._openNodeChat(venue.name, owner);
             });
 
             document.body.appendChild(el);
-            this.motionNodes.push(el);
         });
     }
 
@@ -424,7 +370,7 @@ const update = () => {
     }
 }
 
-// ═══════════════════ المحفظة الحقيقية الكاملة ═══════════════════
+// ═══════════════════ المحفظة الكاملة ═══════════════════
 
 async function buildWalletModal() {
     if (document.getElementById("wallet-modal")) return;
@@ -496,6 +442,7 @@ async function buildWalletModal() {
     modal.appendChild(container);
     document.body.appendChild(modal);
 
+    // ربط الأحداث
     document.getElementById("wallet-refresh-btn").onclick = updateWalletBalance;
     document.getElementById("wallet-send-btn").onclick = walletSendPi;
     document.getElementById("wallet-receive-btn").onclick = walletReceivePi;
@@ -513,10 +460,8 @@ async function updateWalletBalance() {
     const addressEl = document.getElementById("wallet-address-short");
     if (balanceEl) balanceEl.innerText = "-- π";
 
-    // محاولة الحصول على عنوان المحفظة من الجلسة أو من Pi SDK
     let address = sessionStorage.getItem("pi_address");
     if (!address && window.chatooAuth?.isPiAuthenticated() && window.chatooBlock) {
-        // نجرب المصادقة مجدداً للحصول على العنوان (إذا لم يكن مخزناً)
         try {
             if (typeof Pi !== 'undefined') {
                 const auth = await Pi.authenticate(['username', 'payments'], () => {});
@@ -560,7 +505,7 @@ async function updateWalletBalance() {
 }
 
 function walletSendPi() {
-    if (window.chatooBlock && typeof window.chatooBlock.renderTransferModal === 'function') {
+    if (window.chatooBlock && typeof chatooBlock.renderTransferModal === 'function') {
         window.chatooBlock.renderTransferModal();
     } else {
         Swal.fire({
@@ -613,7 +558,8 @@ function walletScanQR() {
     });
 }
 
-async function openWallet() {
+// دالة openWallet العامة (تُستدعى من الأزرار)
+function openWallet() {
     const modal = document.getElementById("wallet-modal");
     if (!modal) return;
 
@@ -624,7 +570,7 @@ async function openWallet() {
         xpEl.innerText = xp;
     }
 
-    // عرض سجل المعاملات من blockchain
+    // عرض سجل المعاملات
     const txList = document.getElementById("wallet-tx-list");
     if (txList && window.chatooBlock?.transactionHistory) {
         const txs = window.chatooBlock.transactionHistory;
@@ -641,9 +587,7 @@ async function openWallet() {
         }
     }
 
-    // تحديث الرصيد فوراً
     updateWalletBalance();
-
     modal.style.display = "flex";
 }
 
