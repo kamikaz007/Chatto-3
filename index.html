@@ -597,13 +597,11 @@
     <div class="app-shell">
 
         <header>
-            <!-- زر تسجيل الدخول (يظهر عندما لا يكون المستخدم موثّقاً) -->
             <div id="btn-pi-signin" class="header-profile-section" onclick="window.chatooAuth?.authenticate()" style="display:flex; gap:8px; align-items:center;">
                 <span style="font-size:20px;">🔐</span>
                 <span style="font-size:12px; font-weight:bold;">تسجيل الدخول</span>
             </div>
 
-            <!-- الملف الشخصي (يظهر بعد المصادقة) -->
             <div class="header-profile-section" onclick="chatoo.route('profile')" id="header-profile-section" style="display:none;">
                 <img id="header-avatar-img" class="header-avatar" src="https://via.placeholder.com/150" alt="Profile">
                 <span id="rank-label">ORIGIN VOYAGER</span>
@@ -1450,8 +1448,6 @@
         }
     };
 
-    
-
     function openSettingsModal() {
         Swal.fire({
             title: '⚙️ الإعدادات',
@@ -1482,4 +1478,4 @@
     </script>
 
 </body>
-                                                                      </html>
+    </html>
