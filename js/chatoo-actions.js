@@ -44,14 +44,14 @@ class ChatooActions {
         this.startLocationTracking();
         buildWalletModal(); // بناء المحفظة الحقيقية
 
-        // ربط مستمع الحركة عند أول لمسة (مهم لطلب الإذن في iOS)
-        const enableMotion = () => {
-            this._enableMotionControl();
-            document.removeEventListener('click', enableMotion);
-            document.removeEventListener('touchstart', enableMotion);
-        };
-        document.addEventListener('click', enableMotion);
-        document.addEventListener('touchstart', enableMotion);
+       // توفير دالة عامة لتفعيل / إيقاف حركة الهاتف
+      window.toggleMotion = () => {
+    if (this.motionEnabled) {
+        this._disableMotionControl();
+    } else {
+        this._enableMotionControl();
+    }
+};
 
         if (window.chatooNotif) {
             window.chatooNotif.systemAlert('واجهة Chatoo السينمائية نشطة');
@@ -213,39 +213,19 @@ class ChatooActions {
     }
 
     _startMotionListener() {
-        window.addEventListener('deviceorientation', (event) => {
-            if (!this.motionNodes.length) return;
-
-            const beta = event.beta || 0;
-            const gamma = event.gamma || 0;
-
-            const sensitivity = 0.25;
-            this._motionX = gamma * sensitivity;
-            this._motionY = beta * sensitivity * 0.5;
-        });
-
-        this.motionEnabled = true;
-        console.log('📳 Motion control enabled');
-
-        if (!this._motionRAF) {
-            const update = () => {
-                if (this.motionNodes.length) {
-                    this.motionNodes.forEach(node => {
-                        const baseX = parseFloat(node.dataset.baseX) || 0;
-                        const baseY = parseFloat(node.dataset.baseY) || 0;
-                        node.style.transform = `translate(${baseX + this._motionX}px, ${baseY + this._motionY}px)`;
-                    });
-                }
-                this._motionRAF = requestAnimationFrame(update);
-            };
-            this._motionRAF = requestAnimationFrame(update);
-        }
-
-        document.querySelectorAll('.floating-node').forEach(node => {
-            node.style.animation = 'none';
+        
+const update = () => {
+    if (this.motionNodes.length) {
+        this.motionNodes.forEach(node => {
+            const baseX = parseFloat(node.dataset.baseX) || 0;
+            const baseY = parseFloat(node.dataset.baseY) || 0;
+            // الحصول على مقياس التحويم الحالي من CSS (إن وجد)
+            const currentScale = node.style.transform?.match(/scale\(([^)]+)\)/)?.[1] || 1;
+            node.style.transform = `translate(${baseX + this._motionX}px, ${baseY + this._motionY}px) scale(${currentScale})`;
         });
     }
-
+    this._motionRAF = requestAnimationFrame(update);
+};
     // ═══════════════════ CSS ═══════════════════
     injectCinematicStyles() {
         if (document.getElementById('chatoo-cinematic-css')) return;
